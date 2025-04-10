@@ -1,10 +1,11 @@
-app = Flask(__name__)
+
 from flask import Flask, request, render_template
 import sqlite3
 import datetime
 from email_sender import send_phishing_email
 from config import TRACKING_URL
 
+app = Flask(__name__)
 
 def init_db():
     with sqlite3.connect('phish.db') as conn:
