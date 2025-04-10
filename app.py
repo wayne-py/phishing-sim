@@ -70,5 +70,6 @@ def report():
     return render_template('report.html', data=data, suggestions=suggestions)
 
 if __name__ == '__main__':
-    init_db()
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
