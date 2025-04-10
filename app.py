@@ -19,9 +19,9 @@ def init_db():
         )''')
         conn.commit()
 
-@app.route('/')
+@app.route('/index')
 def index():
-    return '<h1>Phishing Simulator</h1><a href="/send_emails">Send Test Emails</a> | <a href="/report">View Report</a>'
+    return render_template('index.html')
 
 @app.route('/send_emails')
 def send_emails():
