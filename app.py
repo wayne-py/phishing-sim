@@ -23,8 +23,8 @@ def init_db():
 def index():
     return render_template('index.html')
 
-@app.route('/send_emails')
-def send_emails():
+@app.route('/send_email', methods=['POST'])  # changed here to match the form
+def send_email():  # also change the function name for clarity
     test_users = {
         'user1@example.com': 'user1',
         'user2@example.com': 'user2',
