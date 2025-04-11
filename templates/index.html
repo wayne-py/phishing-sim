@@ -2,17 +2,18 @@
 <html>
 <head><title>Phishing Simulator</title></head>
 <body>
-    <h1>Phishing Simulator</h1>
-    <form method="POST" action="/send_email">
-        <label>Target Emails (comma separated):</label><br>
-        <input type="text" name="emails" required><br><br>
+    <h1>Phishing Email Sender</h1>
+    <form action="/send_email" method="POST">
+        <label for="emails">Recipient Emails (comma-separated):</label><br>
+        <textarea name="emails" rows="4" cols="50"></textarea><br><br>
 
-        <label>Phishing Reason (e.g., invoice, expired password):</label><br>
-        <input type="text" name="reason" required><br><br>
+        <label for="reason">Phishing Reason / Scenario:</label><br>
+        <input type="text" name="reason" /><br><br>
 
-        <button type="submit">Send Test Email</button>
+        <input type="submit" value="Send Emails">
     </form>
+
     <br>
-    <a href="/report"><button>View Report</button></a>
+    <a href="/report">View Report</a>
 </body>
 </html>
