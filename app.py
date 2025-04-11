@@ -23,15 +23,22 @@ def init_db():
 def index():
     return render_template('index.html')
 
-@app.route('/send_email', methods=['POST'])  # changed here to match the form
-def send_email():  # also change the function name for clarity
-    test_users = {
-        'user1@example.com': 'user1',
-        'user2@example.com': 'user2',
-    }
-    for email, user_id in test_users.items():
-        send_phishing_email(email, user_id)
-    return 'Emails sent!'
+@app.route('/send_email', methods=['POST'])
+def send_email():
+    emails = request.form.get('emails')
+    reason = request.form.get('reason')
+
+    if not emails or not reason:
+        return "Missing email or reason", 400
+
+    email_list = emails.split(',')
+
+    for email in email_list:
+        email = email.strip()
+        user_id = email.split('@')[0]  # Simplified user_id
+        send_phishing_email(email, user_id, reason)
+
+    return "Emails sent!"
 
 @app.route('/track')
 def track():
@@ -61,7 +68,7 @@ def track():
 def report():
     with sqlite3.connect('phish.db') as conn:
         c = conn.cursor()
-        c.execute('SELECT * FROM clicks')
+        c.execute('SELECT user_id, timestamp, location FROM clicks')
         data = c.fetchall()
 
     suggestions = {
@@ -70,7 +77,5 @@ def report():
     return render_template('report.html', data=data, suggestions=suggestions)
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
+    init_db()  # custom function to create the SQLite table
     app.run(debug=True)
-
