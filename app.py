@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect
 import sqlite3
 import datetime
 from email_sender import send_phishing_email
@@ -35,7 +35,7 @@ def send_email():
 
     for email in email_list:
         email = email.strip()
-        user_id = email.split('@')[0]  # Simplified user_id
+        user_id = email.split('@')[0]  # Use part of email as ID
         send_phishing_email(email, user_id, reason)
 
     return "Emails sent!"
@@ -62,7 +62,8 @@ def track():
         c.execute('INSERT INTO clicks (user_id, timestamp, user_agent, ip_address, location) VALUES (?, ?, ?, ?, ?)',
                   (user_id, timestamp, user_agent, ip, location))
         conn.commit()
-    return render_template('clicked.html', user_id=user_id)
+
+    return redirect("https://www.google.com")
 
 @app.route('/report')
 def report():
@@ -77,5 +78,5 @@ def report():
     return render_template('report.html', data=data, suggestions=suggestions)
 
 if __name__ == '__main__':
-    init_db()  # custom function to create the SQLite table
+    init_db()
     app.run(debug=True)
