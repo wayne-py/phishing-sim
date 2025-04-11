@@ -3,7 +3,7 @@ from email.mime.text import MIMEText
 from config import SMTP_SERVER, SMTP_PORT, EMAIL_ADDRESS, EMAIL_PASSWORD, TRACKING_URL
 
 def send_phishing_email(to_email, user_id, reason):
-    # Load and personalize the HTML email template
+    # Load and personalize the htmk email template
     with open('templates/email_template.html', 'r') as f:
         template = f.read()
     
@@ -17,7 +17,7 @@ def send_phishing_email(to_email, user_id, reason):
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = to_email
 
-    # Send the email
+    # Snd the email
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
@@ -27,8 +27,3 @@ def send_phishing_email(to_email, user_id, reason):
     except Exception as e:
         print(f"Error sending email to {to_email}: {e}")
 
-            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-            server.send_message(msg)
-            print(f"Email sent to {to_email}")
-    except Exception as e:
-        print(f"Error sending email to {to_email}: {e}")
