@@ -21,8 +21,13 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 
-# Configure the database - use PostgreSQL
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///instance/phishing_sim.db")
+# Fix deprecated postgres URL scheme if needed
+database_uri = os.environ.get("DATABASE_URL", "sqlite:///instance/phishing_sim.db")
+if database_uri.startswith("postgres://"):
+    database_uri = database_uri.replace("postgres://", "postgresql://", 1)
+
+# Configure the database - use PostgreSQL or SQLite fallback
+app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
