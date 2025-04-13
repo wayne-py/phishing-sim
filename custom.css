@@ -1,0 +1,54 @@
+/* Custom CSS */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+.dashboard-stats .card {
+    transition: all 0.3s ease;
+}
+
+.dashboard-stats .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.security-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.template-preview {
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid #444;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.status-badge {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+}
+
+/* Target tables */
+.target-table td, .target-table th {
+    vertical-align: middle;
+}
+
+.target-status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-sent { background-color: var(--bs-info); }
+.status-opened { background-color: var(--bs-warning); }
+.status-clicked { background-color: var(--bs-danger); }
