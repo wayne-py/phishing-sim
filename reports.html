@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5"><i class="fas fa-chart-bar me-3"></i>Reports</h1>
+        <p class="lead">View detailed reports for your phishing campaigns</p>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header">
+        <h5 class="mb-0">Campaign Reports</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Status</th>
+                        <th>Targets</th>
+                        <th>Sent</th>
+                        <th>Opened</th>
+                        <th>Clicked</th>
+                        <th>Open Rate</th>
+                        <th>Click Rate</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for campaign in campaigns %}
+                    <tr>
+                        <td>{{ campaign.name }}</td>
+                        <td>
+                            {% if campaign.status == 'draft' %}
+                            <span class="badge text-bg-secondary status-badge">Draft</span>
+                            {% elif campaign.status == 'scheduled' %}
+                            <span class="badge text-bg-info status-badge">Scheduled</span>
+                            {% elif campaign.status == 'in_progress' %}
+                            <span class="badge text-bg-warning status-badge">In Progress</span>
+                            {% elif campaign.status == 'completed' %}
+                            <span class="badge text-bg-success status-badge">Completed</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ campaign.targets|length }}</td>
+                        <td>{{ campaign.sent_count }}</td>
+                        <td>{{ campaign.opened_count }}</td>
+                        <td>{{ campaign.clicked_count }}</td>
+                        <td>{{ (campaign.opened_count / campaign.sent_count * 100)|round(2) if campaign.sent_count > 0 else 0 }}%</td>
+                        <td>{{ (campaign.clicked_count / campaign.sent_count * 100)|round(2) if campaign.sent_count > 0 else 0 }}%</td>
+                        <td>
+                            <a href="{{ url_for('campaign_report', campaign_id=campaign.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-search me-1"></i>View
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <p class="my-3">No campaigns available for reporting.</p>
+                            <a href="{{ url_for('new_campaign') }}" class="btn btn-primary">
+                                <i class="fas fa-plus-circle me-2"></i>Create Campaign
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Overall Statistics</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="security-icon text-info">
+                            <i class="fas fa-envelope-open"></i>
+                        </div>
+                        <h4>Average Open Rate</h4>
+                        {% set total_sent = namespace(value=0) %}
+                        {% set total_opened = namespace(value=0) %}
+                        {% for campaign in campaigns %}
+                            {% set total_sent.value = total_sent.value + campaign.sent_count %}
+                            {% set total_opened.value = total_opened.value + campaign.opened_count %}
+                        {% endfor %}
+                        <p class="display-5">
+                            {{ (total_opened.value / total_sent.value * 100)|round(2) if total_sent.value > 0 else 0 }}%
+                        </p>
+                    </div>
+                    <div class="col-6">
+                        <div class="security-icon text-danger">
+                            <i class="fas fa-mouse-pointer"></i>
+                        </div>
+                        <h4>Average Click Rate</h4>
+                        {% set total_clicked = namespace(value=0) %}
+                        {% for campaign in campaigns %}
+                            {% set total_clicked.value = total_clicked.value + campaign.clicked_count %}
+                        {% endfor %}
+                        <p class="display-5">
+                            {{ (total_clicked.value / total_sent.value * 100)|round(2) if total_sent.value > 0 else 0 }}%
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Tips</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item bg-transparent">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        Export reports to CSV for further analysis or sharing with your team.
+                    </li>
+                    <li class="list-group-item bg-transparent">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        Identify high-risk users who consistently click on phishing links for targeted training.
+                    </li>
+                    <li class="list-group-item bg-transparent">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        Compare open and click rates across campaigns to measure security awareness improvements.
+                    </li>
+                    <li class="list-group-item bg-transparent">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        Use the detailed campaign view to see exactly when users interacted with emails.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

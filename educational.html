@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header text-center bg-danger text-white">
+                    <h3 class="my-2"><i class="fas fa-exclamation-triangle me-2"></i>Security Alert</h3>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-shield-alt fa-4x text-danger mb-3"></i>
+                        <h2>{{ content.title }}</h2>
+                        <p class="lead">You have clicked on a simulated phishing link.</p>
+                    </div>
+                    
+                    <div class="alert alert-danger">
+                        <p><strong>This was a security awareness test.</strong> In a real attack, your credentials or device could have been compromised.</p>
+                    </div>
+                    
+                    <div class="my-4">
+                        <h4>What Happened?</h4>
+                        <p>{{ content.content }}</p>
+                    </div>
+                    
+                    <div class="my-4">
+                        <h4>Security Tips</h4>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                {{ content.tips|safe }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p>Remember: Security is everyone's responsibility.</p>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <small class="text-muted">Security Awareness Training &copy; {{ target.link_clicked_at.year }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5"><i class="fas fa-tachometer-alt me-3"></i>Dashboard</h1>
+        <p class="lead">Welcome back, {{ current_user.username }}! Here's an overview of your phishing campaigns.</p>
+    </div>
+</div>
+
+<div class="row dashboard-stats mb-5">
+    <div class="col-md-3 mb-4">
+        <div class="card border-primary h-100 text-center">
+            <div class="card-body">
+                <div class="security-icon text-primary">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <h5 class="card-title">Total Campaigns</h5>
+                <p class="display-5">{{ total_campaigns }}</p>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">{{ active_campaigns }} active campaigns</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card border-info h-100 text-center">
+            <div class="card-body">
+                <div class="security-icon text-info">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h5 class="card-title">Total Targets</h5>
+                <p class="display-5">{{ total_targets }}</p>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">{{ total_sent }} emails sent</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card border-warning h-100 text-center">
+            <div class="card-body">
+                <div class="security-icon text-warning">
+                    <i class="fas fa-envelope-open"></i>
+                </div>
+                <h5 class="card-title">Open Rate</h5>
+                <p class="display-5">{{ open_rate }}%</p>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">{{ total_opened }} emails opened</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card border-danger h-100 text-center">
+            <div class="card-body">
+                <div class="security-icon text-danger">
+                    <i class="fas fa-mouse-pointer"></i>
+                </div>
+                <h5 class="card-title">Click Rate</h5>
+                <p class="display-5">{{ click_rate }}%</p>
+            </div>
+            <div class="card-footer">
+                <small class="text-muted">{{ total_clicked }} links clicked</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-7">
+        <div class="card shadow">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Campaigns</h5>
+                <a href="{{ url_for('campaigns') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Targets</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for campaign in recent_campaigns %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('campaign_detail', campaign_id=campaign.id) }}">
+                                        {{ campaign.name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if campaign.status == 'draft' %}
+                                    <span class="badge text-bg-secondary status-badge">Draft</span>
+                                    {% elif campaign.status == 'scheduled' %}
+                                    <span class="badge text-bg-info status-badge">Scheduled</span>
+                                    {% elif campaign.status == 'in_progress' %}
+                                    <span class="badge text-bg-warning status-badge">In Progress</span>
+                                    {% elif campaign.status == 'completed' %}
+                                    <span class="badge text-bg-success status-badge">Completed</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ campaign.targets|length }}</td>
+                                <td>{{ campaign.created_at.strftime('%b %d, %Y') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No campaigns yet. <a href="{{ url_for('new_campaign') }}">Create one!</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+        <div class="card shadow h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Campaign Statistics</h5>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center">
+                {% if total_sent > 0 %}
+                <canvas 
+                    id="campaignStatsChart" 
+                    data-sent="{{ total_sent }}" 
+                    data-opened="{{ total_opened }}" 
+                    data-clicked="{{ total_clicked }}">
+                </canvas>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-bar fa-4x mb-3 text-muted"></i>
+                    <p>No data available yet. Start sending emails to see statistics.</p>
+                    <a href="{{ url_for('new_campaign') }}" class="btn btn-primary mt-2">Create Campaign</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('new_campaign') }}" class="btn btn-outline-primary btn-lg w-100">
+                            <i class="fas fa-plus-circle me-2"></i> New Campaign
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('new_template') }}" class="btn btn-outline-info btn-lg w-100">
+                            <i class="fas fa-envelope-open-text me-2"></i> New Template
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('reports') }}" class="btn btn-outline-success btn-lg w-100">
+                            <i class="fas fa-chart-line me-2"></i> View Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

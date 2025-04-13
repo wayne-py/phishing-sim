@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5"><i class="fas fa-chart-bar me-3"></i>{{ campaign.name }}</h1>
+        <p class="lead">Detailed campaign results and analytics</p>
+    </div>
+    <div class="col-auto align-self-center">
+        <form action="{{ url_for('export_report', campaign_id=campaign.id) }}" method="POST">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-file-export me-2"></i>Export CSV
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4 mb-4">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <div class="security-icon text-info">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <h4>Emails Sent</h4>
+                <p class="display-5">{{ emails_sent }}</p>
+                <p class="text-muted">Out of {{ total_targets }} targets</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <div class="security-icon text-warning">
+                    <i class="fas fa-envelope-open"></i>
+                </div>
+                <h4>Open Rate</h4>
+                <p class="display-5">{{ open_rate }}%</p>
+                <p class="text-muted">{{ emails_opened }} emails opened</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <div class="security-icon text-danger">
+                    <i class="fas fa-mouse-pointer"></i>
+                </div>
+                <h4>Click Rate</h4>
+                <p class="display-5">{{ click_rate }}%</p>
+                <p class="text-muted">{{ links_clicked }} links clicked</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-7 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Campaign Summary</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="campaignReportChart" 
+                        data-sent="{{ emails_sent }}" 
+                        data-opened="{{ emails_opened }}" 
+                        data-clicked="{{ links_clicked }}">
+                </canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Campaign Details</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item bg-transparent d-flex justify-content-between">
+                        <span>Status:</span>
+                        <span>
+                            {% if campaign.status == 'draft' %}
+                            <span class="badge text-bg-secondary">Draft</span>
+                            {% elif campaign.status == 'scheduled' %}
+                            <span class="badge text-bg-info">Scheduled</span>
+                            {% elif campaign.status == 'in_progress' %}
+                            <span class="badge text-bg-warning">In Progress</span>
+                            {% elif campaign.status == 'completed' %}
+                            <span class="badge text-bg-success">Completed</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="list-group-item bg-transparent d-flex justify-content-between">
+                        <span>Template Used:</span>
+                        <span>{{ campaign.template.name }}</span>
+                    </li>
+                    <li class="list-group-item bg-transparent d-flex justify-content-between">
+                        <span>Created:</span>
+                        <span>{{ campaign.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </li>
+                    {% if campaign.scheduled_time %}
+                    <li class="list-group-item bg-transparent d-flex justify-content-between">
+                        <span>Scheduled Time:</span>
+                        <span>{{ campaign.scheduled_time.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </li>
+                    {% endif %}
+                    <li class="list-group-item bg-transparent d-flex justify-content-between">
+                        <span>Vulnerable Users:</span>
+                        <span class="text-danger">{{ links_clicked }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Target Results</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover target-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Result</th>
+                        <th>Sent</th>
+                        <th>Opened</th>
+                        <th>Clicked</th>
+                        <th>Time to Open</th>
+                        <th>Time to Click</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for target in targets %}
+                    <tr>
+                        <td>{{ target.first_name }} {{ target.last_name }}</td>
+                        <td>{{ target.email }}</td>
+                        <td>
+                            {% if target.link_clicked %}
+                            <span class="badge text-bg-danger">Clicked</span>
+                            {% elif target.email_opened %}
+                            <span class="badge text-bg-warning">Opened</span>
+                            {% elif target.email_sent %}
+                            <span class="badge text-bg-info">Sent</span>
+                            {% else %}
+                            <span class="badge text-bg-secondary">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ target.email_sent_at.strftime('%Y-%m-%d %H:%M') if target.email_sent_at else '-' }}</td>
+                        <td>{{ target.email_opened_at.strftime('%Y-%m-%d %H:%M') if target.email_opened_at else '-' }}</td>
+                        <td>{{ target.link_clicked_at.strftime('%Y-%m-%d %H:%M') if target.link_clicked_at else '-' }}</td>
+                        <td>
+                            {% if target.email_sent_at and target.email_opened_at %}
+                                {% set time_to_open = (target.email_opened_at - target.email_sent_at).total_seconds() / 60 %}
+                                {{ time_to_open|round(1) }} minutes
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if target.email_sent_at and target.link_clicked_at %}
+                                {% set time_to_click = (target.link_clicked_at - target.email_sent_at).total_seconds() / 60 %}
+                                {{ time_to_click|round(1) }} minutes
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">No targets in this campaign.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

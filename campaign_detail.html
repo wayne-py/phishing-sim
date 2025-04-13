@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">
+            {% if campaign %}
+            <i class="fas fa-bullhorn me-3"></i>{{ campaign.name }}
+            {% else %}
+            <i class="fas fa-plus-circle me-3"></i>New Campaign
+            {% endif %}
+        </h1>
+        <p class="lead">
+            {% if campaign %}
+            Edit campaign details and manage targets
+            {% else %}
+            Create a new phishing simulation campaign
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-5 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Campaign Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('campaign_detail', campaign_id=campaign.id) if campaign else url_for('new_campaign') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
+                        {% for error in form.name.errors %}
+                            <div class="form-text text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows=3) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.template_id.label(class="form-label") }}
+                        {{ form.template_id(class="form-select") }}
+                        {% for error in form.template_id.errors %}
+                            <div class="form-text text-danger">{{ error }}</div>
+                        {% endfor %}
+                        {% if form.template_id.choices|length == 0 %}
+                            <div class="form-text text-warning">No templates available. <a href="{{ url_for('new_template') }}">Create a template</a> first.</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ form.schedule(class="form-check-input") }}
+                        {{ form.schedule.label(class="form-check-label") }}
+                    </div>
+                    <div class="mb-3" id="scheduleDateTimeDiv">
+                        {{ form.scheduled_time.label(class="form-label") }}
+                        {{ form.scheduled_time(class="form-control", type="datetime-local") }}
+                        {% for error in form.scheduled_time.errors %}
+                            <div class="form-text text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+
+                {% if campaign %}
+                <hr>
+                <h6 class="mb-3">Campaign Status: 
+                    {% if campaign.status == 'draft' %}
+                    <span class="badge text-bg-secondary">Draft</span>
+                    {% elif campaign.status == 'scheduled' %}
+                    <span class="badge text-bg-info">Scheduled</span>
+                    {% elif campaign.status == 'in_progress' %}
+                    <span class="badge text-bg-warning">In Progress</span>
+                    {% elif campaign.status == 'completed' %}
+                    <span class="badge text-bg-success">Completed</span>
+                    {% endif %}
+                </h6>
+
+                {% if campaign.status in ('draft', 'scheduled') and campaign.targets|length > 0 %}
+                <form action="{{ url_for('launch_campaign', campaign_id=campaign.id) }}" method="POST" class="d-grid gap-2">
+                    <button type="submit" class="btn btn-warning" onclick="return confirm('Are you sure you want to launch this campaign? This will send phishing emails to all targets.');">
+                        <i class="fas fa-paper-plane me-2"></i>Launch Campaign
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if campaign.status == 'in_progress' %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-info-circle me-2"></i>This campaign is currently in progress.
+                </div>
+                {% endif %}
+
+                {% if campaign.scheduled_time and campaign.status == 'scheduled' %}
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-clock me-2"></i>Scheduled to run at {{ campaign.scheduled_time.strftime('%Y-%m-%d %H:%M') }}
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if campaign %}
+    <div class="col-md-7 mb-4">
+        <div class="card shadow">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Targets</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#addTargetModal">
+                        <i class="fas fa-plus-circle me-1"></i>Add Target
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#importTargetsModal">
+                        <i class="fas fa-file-import me-1"></i>Import Targets
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover target-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Sent At</th>
+                                <th>Opened At</th>
+                                <th>Clicked At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for target in targets %}
+                            <tr>
+                                <td>{{ target.first_name }} {{ target.last_name }}</td>
+                                <td>{{ target.email }}</td>
+                                <td>
+                                    {% if target.link_clicked %}
+                                    <span class="target-status-dot status-clicked"></span>Clicked
+                                    {% elif target.email_opened %}
+                                    <span class="target-status-dot status-opened"></span>Opened
+                                    {% elif target.email_sent %}
+                                    <span class="target-status-dot status-sent"></span>Sent
+                                    {% else %}
+                                    <span class="target-status-dot"></span>Pending
+                                    {% endif %}
+                                </td>
+                                <td>{{ target.email_sent_at.strftime('%Y-%m-%d %H:%M') if target.email_sent_at else '-' }}</td>
+                                <td>{{ target.email_opened_at.strftime('%Y-%m-%d %H:%M') if target.email_opened_at else '-' }}</td>
+                                <td>{{ target.link_clicked_at.strftime('%Y-%m-%d %H:%M') if target.link_clicked_at else '-' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center">No targets added yet. Add targets to send phishing emails.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h6>Total Targets</h6>
+                        <p class="lead mb-0">{{ targets|length }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Emails Sent</h6>
+                        <p class="lead mb-0">{{ campaign.sent_count }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Click Rate</h6>
+                        <p class="lead mb-0">{{ (campaign.clicked_count / campaign.sent_count * 100)|round(2) if campaign.sent_count > 0 else 0 }}%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Target Modal -->
+    <div class="modal fade" id="addTargetModal" tabindex="-1" aria-labelledby="addTargetModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTargetModalLabel">Add Target</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{{ url_for('add_target', campaign_id=campaign.id) }}">
+                        {{ target_form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ target_form.first_name.label(class="form-label") }}
+                            {{ target_form.first_name(class="form-control") }}
+                            {% for error in target_form.first_name.errors %}
+                                <div class="form-text text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ target_form.last_name.label(class="form-label") }}
+                            {{ target_form.last_name(class="form-control") }}
+                            {% for error in target_form.last_name.errors %}
+                                <div class="form-text text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="mb-3">
+                            {{ target_form.email.label(class="form-label") }}
+                            {{ target_form.email(class="form-control") }}
+                            {% for error in target_form.email.errors %}
+                                <div class="form-text text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="d-grid gap-2">
+                            {{ target_form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Targets Modal -->
+    <div class="modal fade" id="importTargetsModal" tabindex="-1" aria-labelledby="importTargetsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importTargetsModalLabel">Import Targets</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{{ url_for('import_targets', campaign_id=campaign.id) }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label">CSV File</label>
+                            <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                            <div class="form-text">
+                                The CSV file should have the following columns: <code>first_name</code>, <code>last_name</code>, <code>email</code>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Import Targets</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const scheduleCheckbox = document.getElementById('schedule');
+        const scheduleDateTimeDiv = document.getElementById('scheduleDateTimeDiv');
+        
+        if (scheduleCheckbox && scheduleDateTimeDiv) {
+            function toggleScheduleDateTime() {
+                scheduleDateTimeDiv.style.display = scheduleCheckbox.checked ? 'block' : 'none';
+            }
+            
+            toggleScheduleDateTime();
+            scheduleCheckbox.addEventListener('change', toggleScheduleDateTime);
+        }
+    });
+</script>
+{% endblock %}

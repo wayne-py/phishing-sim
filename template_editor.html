@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    #template-preview {
+        border: 1px solid #444;
+        padding: 1rem;
+        min-height: 300px;
+        margin-top: 1rem;
+        overflow: auto;
+    }
+    
+    .template-element {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">
+            {% if template %}
+            <i class="fas fa-edit me-3"></i>Edit Template
+            {% else %}
+            <i class="fas fa-plus-circle me-3"></i>New Template
+            {% endif %}
+        </h1>
+        <p class="lead">
+            {% if template %}
+            Edit your phishing email template
+            {% else %}
+            Create a new phishing email template
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Template Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('edit_template', template_id=template.id) if template else url_for('new_template') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
+                        {% for error in form.name.errors %}
+                            <div class="form-text text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.subject.label(class="form-label") }}
+                        {{ form.subject(class="form-control") }}
+                        {% for error in form.subject.errors %}
+                            <div class="form-text text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.sender_name.label(class="form-label") }}
+                        {{ form.sender_name(class="form-control") }}
+                        {% for error in form.sender_name.errors %}
+                            <div class="form-text text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.sender_email.label(class="form-label") }}
+                        {{ form.sender_email(class="form-control") }}
+                        {% for error in form.sender_email.errors %}
+                            <div class="form-text text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.content.label(class="form-label") }}
+                        <div class="mb-2">
+                            <button id="preview-button" class="btn btn-sm btn-outline-info" type="button">
+                                <i class="fas fa-eye me-1"></i>Preview
+                            </button>
+                        </div>
+                        {{ form.content(class="form-control", rows=10) }}
+                        {% for error in form.content.errors %}
+                            <div class="form-text text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Template Preview</h5>
+            </div>
+            <div class="card-body">
+                <div id="template-preview">
+                    {% if template %}
+                    {{ template.content|safe }}
+                    {% else %}
+                    <p>Template preview will appear here.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="card shadow mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Template Elements</h5>
+            </div>
+            <div class="card-body">
+                <p>Insert these elements into your template to personalize emails:</p>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Element</th>
+                                <th>Description</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>{{first_name}}</code></td>
+                                <td>Target's first name</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary template-element-btn" data-element="{{first_name}}">Insert</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code>{{last_name}}</code></td>
+                                <td>Target's last name</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary template-element-btn" data-element="{{last_name}}">Insert</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code>{{email}}</code></td>
+                                <td>Target's email address</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary template-element-btn" data-element="{{email}}">Insert</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code>{{tracking_url}}</code></td>
+                                <td>Tracking link URL</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary template-element-btn" data-element="{{tracking_url}}">Insert</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><code>{{ '{{ current_year }}' }}</code></td>
+                                <td>Current year</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary template-element-btn" data-element="{{current_year}}">Insert</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <strong>Tip:</strong> Use <code>{{tracking_url}}</code> in links that you want to track when clicked.
+                    <br>
+                    Example: <code>&lt;a href="{{tracking_url}}"&gt;Click here&lt;/a&gt;</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/template_editor.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5"><i class="fas fa-graduation-cap me-3"></i>Educational Content</h1>
+        <p class="lead">Manage the content shown to users who click on phishing links</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-5 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Add New Content</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('manage_educational') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control") }}
+                        {% for error in form.title.errors %}
+                            <div class="form-text text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.content.label(class="form-label") }}
+                        {{ form.content(class="form-control", rows=5) }}
+                        {% for error in form.content.errors %}
+                            <div class="form-text text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.tips.label(class="form-label") }}
+                        {{ form.tips(class="form-control", rows=5) }}
+                        <div class="form-text">You can use HTML for formatting. For example, use &lt;ul&gt;&lt;li&gt;Your tip&lt;/li&gt;&lt;/ul&gt; for lists.</div>
+                        {% for error in form.tips.errors %}
+                            <div class="form-text text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-7 mb-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">Existing Content</h5>
+            </div>
+            <div class="card-body">
+                {% if content_list %}
+                <div class="accordion" id="educationalContentAccordion">
+                    {% for content in content_list %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading{{ content.id }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ content.id }}" aria-expanded="false" aria-controls="collapse{{ content.id }}">
+                                {{ content.title }}
+                            </button>
+                        </h2>
+                        <div id="collapse{{ content.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ content.id }}" data-bs-parent="#educationalContentAccordion">
+                            <div class="accordion-body">
+                                <h6>Main Content:</h6>
+                                <p>{{ content.content }}</p>
+                                
+                                <h6>Security Tips:</h6>
+                                <div>{{ content.tips|safe }}</div>
+                                
+                                <small class="text-muted d-block mt-3">Last updated: {{ content.updated_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-book-open fa-3x mb-3 text-muted"></i>
+                    <p>No educational content yet. Add some to show users when they click on phishing links.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card shadow mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Tips for Effective Training</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item bg-transparent">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Keep content concise and easy to understand.
+                    </li>
+                    <li class="list-group-item bg-transparent">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Include actionable security tips that users can implement immediately.
+                    </li>
+                    <li class="list-group-item bg-transparent">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Use real-world examples to illustrate phishing techniques.
+                    </li>
+                    <li class="list-group-item bg-transparent">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Vary the content to cover different types of phishing attacks.
+                    </li>
+                    <li class="list-group-item bg-transparent">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Update content regularly to address emerging threats.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
