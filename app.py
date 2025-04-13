@@ -26,7 +26,7 @@ database_uri = os.environ.get("DATABASE_URL", "sqlite:///instance/phishing_sim.d
 if database_uri.startswith("postgres://"):
     database_uri = database_uri.replace("postgres://", "postgresql://", 1)
 
-# Configure the database - use PostgreSQL or SQLite fallback
+# Configure the database
 app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
@@ -63,6 +63,8 @@ def inject_now():
 with app.app_context():
     # Import models to ensure tables are created
     import models
+
+    # Create tables only if they don't exist already
     db.create_all()
 
     # Import and register routes
